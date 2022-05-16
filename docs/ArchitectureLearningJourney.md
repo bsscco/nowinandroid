@@ -1,47 +1,40 @@
-# Architecture Learning Journey
+# 아키텍쳐 학습 여행
 
-In this learning journey you will learn about the Now in Android app architecture: its layers, key classes and the interactions between them.
-
-
-## Goals and requirements
-
-The goals for the app architecture are:
+이 학습여행에서 당신은 New in Android App 아키텍쳐에 대해 배울 거에요. 이 아키텍쳐는 레이어와 핵심 클래스, 그리고 이들 사이의 상호작용에 대한 것을 말해요.
 
 
+## 목표와 요구사항
 
-*   Follow the [official architecture guidance](https://developer.android.com/jetpack/guide) as closely as possible.
-*   Easy for developers to understand, nothing too experimental.
-*   Support multiple developers working on the same codebase.
-*   Facilitate local and instrumented tests, both on the developer’s machine and using Continuous Integration (CI).
-*   Minimize build times.
+앱 아키텍쳐를 위한 목표:
+*   가능한 한 [공식 아키텍쳐 가이드](https://developer.android.com/jetpack/guide)를 따라요.
+*   개발자가 이해하기 쉽도록 너무 실험적인 것을 다루지 않아요.
+*   같은 코드베이스에서 여러 개발자가 일할 수 있도록 도와요.
+*   CI를 통해 로컬 및 Instrumented 테스트를 촉진해요.
+*   빌드타임을 최소화해요.
 
 
-## Architecture overview
+## 아키텍쳐 개요
 
-The app architecture has two layers: a [data layer](https://developer.android.com/jetpack/guide/data-layer) and [UI layer](https://developer.android.com/jetpack/guide/ui-layer) (a third, [the domain layer](https://developer.android.com/jetpack/guide/domain-layer), is currently in development).
+이 앱의 아키텍쳐는 2가지 레이어를 가져요. [데이터 레이어](https://developer.android.com/jetpack/guide/data-layer), [UI 레이어](https://developer.android.com/jetpack/guide/ui-layer) (추가적으로, [도메인 레이어](https://developer.android.com/jetpack/guide/domain-layer)).
 
 
 <center>
 <img src="images/architecture-1-overall.png" width="600px" alt="Diagram showing overall app architecture" />
 </center>
 
+이 아키텍쳐는 [단방향 데이터 흐름](https://developer.android.com/jetpack/guide/ui-layer#udf)과 반응형 프로그래밍 모델을 따라요. 아래는 두 레이어의 핵심 개념이에요:
+*   상위 레이어는 하위 레이어의 변화에 반응해요.
+*   이벤트는 아래로 흘러요.
+*   데이터는 위로 흘러요.
 
-The architecture follows a reactive programming model with [unidirectional data flow](https://developer.android.com/jetpack/guide/ui-layer#udf). With the data layer at the bottom, the key concepts are:
-
-
-
-*   Higher layers react to changes in lower layers.
-*   Events flow down.
-*   Data flows up.
-
-The data flow is achieved using streams, implemented using [Kotlin Flows](https://developer.android.com/kotlin/flow).
+데이터는 [코틀린 Flows](https://developer.android.com/kotlin/flow)를 통해 구현된 스트림을 통해 흘러요.
 
 
-### Example: Displaying news on the For You screen
+### 예제: 당신의 화면 위에 뉴스 보여주기
 
-When the app is first run it will attempt to load a list of news resources from a remote server (when the `staging` or `release` build variant is selected, `debug` builds will use local data). Once loaded, these are shown to the user based on the interests they choose.
+앱이 처음 실행됐을 때 앱은 뉴스 리소스를 원격 서버로부터 불러올 거에요. 원격 서버는 빌드 variant가 staging, realese일 때 사용되고, debug일 때는 로컬 데이터가 사용돼요. 불러온 뉴스 리소스는 사용자의 관심사에 따라 필터링 되어 표시됩니다.
 
-The following diagram shows the events which occur and how data flows from the relevant objects to achieve this.
+아래 다이어그램은 이벤트가 어떻게 발생하고, 이벤트를 처리하기 위해 관련된 객체에서 데이터가 어떻게 흐르는지 보여줍니다.
 
 
 ![Diagram showing how news resources are displayed on the For You screen](images/architecture-2-example.png "Diagram showing how news resources are displayed on the For You screen")
