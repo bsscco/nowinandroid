@@ -11,7 +11,10 @@ follows Android design and development best practices and is intended to be a us
 for developers. As a running app, it's intended to help developers keep up-to-date with the world
 of Android development by providing regular news updates.
 
+-> Kotlin과 Jetpack Compose으로 구현했습니다. Android 디자인, 개발의 Best practice를 따릅니다.
+
 The app is currently in early stage development and is not yet available on the Play Store.
+
 
 # Features
 
@@ -20,6 +23,8 @@ Now in Android displays content from the
 links to recent videos, articles and other content. Users can also follow topics they are interested
 in or follow specific authors.
 
+-> Now in Android 시리즈 목록을 보여줍니다. 사용자는 주제 또는 저자를 팔로우 할 수 있습니다.
+
 ## Screenshots
 
 ![Screenshot showing For You screen](docs/images/screenshot-1-foryou.png "Screenshot showing For You screen") 
@@ -27,7 +32,7 @@ in or follow specific authors.
 ![Screenshot showing Topic detail screen](docs/images/screenshot-3-topicdetail.png "Screenshot showing Topic detail screen")
 
 
-# Development Environment
+# 개발 환경
 
 Now in Android uses the Gradle build system and can be imported directly into the latest stable
 version of Android Studio (available [here](https://developer.android.com/studio)). The `debug`
@@ -38,21 +43,27 @@ understanding of which libraries and tools are being used, the reasoning behind 
 UI, testing, architecture and more, and how all of these different pieces of the project fit
 together to create a complete app.
 
+-> 앱을 실행해보면 아래의 학습 과정을 참고하여 라이브러리, 도구, UI, 테스트, 아키텍쳐 등 이러한 접근법들의 이유를 학습할 수 있습니다.
+
 NOTE: Building the app using an M1 Mac will require the use of
 [Rosetta](https://support.apple.com/en-gb/HT211861). See
 [the following bug](https://github.com/protocolbuffers/protobuf/issues/9397#issuecomment-1086138036)
 for more details.
 
-# Architecture
+# 아키텍쳐
 
 The Now in Android app follows the
 [official architecture guidance](https://developer.android.com/topic/architecture) 
 and is described in detail in the
 [architecture learning journey](docs/ArchitectureLearningJourney.md).
 
-# Build
+-> Now in Android 앱은 공식 아키텍쳐 가이드를 따르며, architecture learning journey에 자세하게 설명되어있습니다.
+
+# 빌드
 
 The `debug` variant of `app` uses local data to allow immediate building and exploring the UI.
+
+-> debug 빌드에선 로컬 데이터를 사용합니다.
 
 The `staging` and `release` variants of `app` make real network calls to a backend server, providing
 up-to-date data as new episodes of Now in Android are released. At this time, there is not a
@@ -61,13 +72,19 @@ public backend available.
 The `benchmark` variant of `app` is used to test startup performance and generate a baseline profile
 (see below for more information).
 
+-> benchmark 빌드는 실행시간 성능 테스트를 위해 사용됩니다.
+
 `app-nia-catalog` is a standalone app that displays the list of components that are stylized for
 Now in Android.
 
-# Testing
+-> app-nia-catalog 는 Now in Android를 위해 제작된 컴포넌트 목록을 보여주는 개별 앱입니다.
+
+# 테스트
 
 To facilitate testing of components, Now in Android uses dependency injection with
 [Hilt](https://developer.android.com/training/dependency-injection/hilt-android).
+
+-> 컴포넌트들을 테스트 하기 이ㅜ해 Now in Android는 DI(Hilt)를 사용합니다.
 
 Most data layer components are defined as interfaces.
 Then, concrete implementations (with various dependencies) are bound to provide those interfaces to
@@ -76,10 +93,14 @@ In tests, Now in Android notably does _not_ use any mocking libraries.
 Instead, the production implementations can be replaced with test doubles using Hilt's testing APIs
 (or via manual constructor injection for `ViewModel` tests).
 
+-> 대부분의 데이터 레이어 컴포넌트들은 인터페이스로 정의됩니다. 그리고 구현체들은 DI를 통해 바인딩 됩니다. 테스트에서 다른 Mocking 라이브러리를 사용하지 않습니다. 대신에 Hilt의 테스팅 API를 사용해 테스트 더블로 대체합니다.
+
 These test doubles implement the same interface as the production implementations, and generally
 provide a simplified (but still realistic) implementation with additional testing hooks.
 This results in less brittle tests that may exercise more production code, instead of just verifying
 specific calls against mocks.
+
+-> 이런 
 
 Examples:
 - In instrumentation tests, a temporary folder is used to store the user's preferences, which is
