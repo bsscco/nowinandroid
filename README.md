@@ -100,24 +100,30 @@ provide a simplified (but still realistic) implementation with additional testin
 This results in less brittle tests that may exercise more production code, instead of just verifying
 specific calls against mocks.
 
--> 이런 
+-> 이런 테스트 더블들은 프로덕션 구현체처럼 같은 인터페이스를 구현합니다. 그리고 테스팅 훅이 추가된 단순하게 구현을 제공합니다. 이 결과로 다루기 힘든 테스트들은 더 적어지고, 프로덕션 코드에 더 집중할 수 있습니다.
 
 Examples:
 - In instrumentation tests, a temporary folder is used to store the user's preferences, which is
   wiped after reach test.
   This allows using the real `DataStore` and exercising all related code, instead of mocking the 
   flow of data updates.
+  
+  -> 계측 테스트에서 임시 폴더는 사용자의 설정을 저장하는 데에 쓰입니다. 이것은 테스트 이후에 지워집니다. 이것은 DataStore와 관련된 코드들을 테스트할 수 있게 해줍니다.
 
 - There are `Test` implementations of each repository, which implement the normal, full repository
   interface and also provide test-only hooks.
   `ViewModel` tests use these `Test` repositories, and thus can use the test-only hooks to
   manipulate the the state of the `Test` repository and verify the resulting behavior, instead of
   checking that specific repository methods were called.
+  
+  -> 각 레포지토리의 테스트 구현들은 레포지토리 인터페이스를 구현하며 테스트 전용 훅을 제공합니다. ViewModel 테스트는 이런 테스트 레포지토리들을 사용합니다.
 
 # UI
 
 UI components are designed according to [Material 3 guidelines](https://m3.material.io/) and built
 entirely using [Jetpack Compose](https://developer.android.com/jetpack/compose). 
+
+-> UI 컴포넌트들은 Material 3 가이드를 따르도록 설계되었습니다. 그리고 Jetpack Compose를 사용해 구현되었습니다.
 
 The app has two themes: 
 
