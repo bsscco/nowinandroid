@@ -40,7 +40,7 @@
 ![Diagram showing how news resources are displayed on the For You screen](images/architecture-2-example.png "Diagram showing how news resources are displayed on the For You screen")
 
 
-아래 표는 각 스탭에서 무슨 일이 일어나는지 보여줍니다. 연관된 코드를 찾는 가장 쉬운 방법은 안드로이드 스튜디오에서 프로젝트를 불러오는 것입니다. 그리고 아래 코드 열의 텍스트를 찾는 것이죠.
+아래 표는 각 스탭에서 무슨 일이 일어나는지 보여줍니다. 연관된 코드를 찾는 가장 쉬운 방법은 안드로이드 스튜디오에서 프로젝트를 불러오는 것입니다. 그리고 아래 코드 열의 텍스트를 찾습니다.
 
 
 <table>
@@ -71,7 +71,7 @@
   <tr>
    <td>3
    </td>
-   <td>WorkManager는 동기화 job을 실행합니다. job은 원격 데이터소스로 데이터 동기화를 시작하기 위해 <code>OfflineFirstNewsRepository</code>를 호출합니다.
+   <td>WorkManager는 동기화 job을 실행합니다. job은 원격 데이터소스와 데이터를 동기화 하기 위해 <code>OfflineFirstNewsRepository</code>를 호출합니다.
    </td>
    <td><code>SyncWorker.doWork</code>
    </td>
@@ -79,7 +79,7 @@
   <tr>
    <td>4
    </td>
-   <td><code>OfflineFirstNewsRepository</code>는 실제 API 요청을 실행하기 위해 <code>RetrofitNiaNetwork</code>를 호출합니다. API 요청은 <a href="https://square.github.io/retrofit/">Retrofit</a>을 통해 수행됩니다.
+   <td><code>OfflineFirstNewsRepository</code>는 실제 API 요청을 위해 <code>RetrofitNiaNetwork</code>를 호출합니다. API 요청은 <a href="https://square.github.io/retrofit/">Retrofit</a>을 통해 수행됩니다.
    </td>
    <td><code>OfflineFirstNewsRepository.syncWith</code>
    </td>
@@ -87,7 +87,7 @@
   <tr>
    <td>5
    </td>
-   <td><code>RetrofitNiaNetwork</code>는 원격서버에 REST API를 호출합니다.
+   <td><code>RetrofitNiaNetwork</code>는 REST API를 원격서버로 호출합니다.
    </td>
    <td><code>RetrofitNiaNetwork.getNewsResources</code>
    </td>
@@ -95,7 +95,7 @@
   <tr>
    <td>6
    </td>
-   <td><code>RetrofitNiaNetwork</code>는 원격서버로부터 응답을 받습니다.
+   <td><code>RetrofitNiaNetwork</code>가 원격서버로부터 응답을 받습니다.
    </td>
    <td><code>RetrofitNiaNetwork.getNewsResources</code>
    </td>
@@ -111,7 +111,7 @@
   <tr>
    <td>8
    </td>
-   <td><code>NewsResourceDao</code>의 데이터가 바뀌었을 때 Dao는 <a href="https://developer.android.com/kotlin/flow">Flow</a> 스트림을 통해 뉴스 데이터를 방출합니다.
+   <td><code>NewsResourceDao</code>의 데이터가 바뀌었을 때 <code>NewsResourceDao</code>는 <a href="https://developer.android.com/kotlin/flow">Flow</a> 스트림을 통해 뉴스 데이터를 방출합니다.
    </td>
    <td><code>NewsResourceDao.getNewsResourcesStream</code>
    </td>
@@ -127,9 +127,9 @@
   <tr>
    <td>10
    </td>
-   <td><code>When ForYouViewModel</code>이 뉴스 리소스를 받았을 때 피드 상태를 <code>Success</code>로 갱신합니다. <code>ForYouScreen</code>은 뉴스 리소스를 사용해 화면을 그립니다.
+   <td><code>When ForYouViewModel</code>이 뉴스 리소스를 받았을 때 뉴스 피드 상태를 <code>Success</code>로 갱신합니다. <code>ForYouScreen</code>은 뉴스 리소스를 사용해 화면을 그립니다.
 <p>
-화면은 뉴스 리소스를 보여줍니다.
+화면은 뉴스 리소스를 사용자의 관심사에 따라 필터링 하여 보여줍니다.
    </td>
    <td><code>ForYouFeedState.Success</code>
    </td>
@@ -138,54 +138,54 @@
 
 
 
-## Data layer
+## 데이터 레이어
 
-The data layer is implemented as an offline-first source of app data and business logic. It is the source of truth for all data in the app.
-
-
-
-![Diagram showing the data layer architecture](images/architecture-3-data-layer.png "Diagram showing the data layer architecture")
+데이터 레이어는 오프라인 소스 기준으로 앱 데이터와 비지니스 로직을 구현합니다. 이것은 앱의 모든 데이터에 source of truth 원칙을 적용하기 위함입니다.
 
 
-Each repository has its own models. For example, the `TopicsRepository` has a `Topic` model and the `NewsRepository` has a `NewsResource` model.
 
-Repositories are the public API for other layers, they provide the _only_ way to access the app data. The repositories typically offer one or more methods for reading and writing data.
-
-
-### Reading data
-
-Data is exposed as data streams. This means each client of the repository must be prepared to react to data changes. Data is not exposed as a snapshot (e.g. `getModel`) because there's no guarantee that it will still be valid by the time it is used.
-
-Reads are performed from local storage as the source of truth, therefore errors are not expected when reading from `Repository` instances. However, errors may occur when trying to reconcile data in local storage with remote sources. For more on error reconciliation, check the data synchronization section below.
-
-_Example: Read a list of authors_
-
-A list of Authors can be obtained by subscribing to `AuthorsRepository::getAuthorsStream` flow which emits `List<Authors>`.
-
-Whenever the list of authors changes (for example, when a new author is added), the updated `List<Author>` is emitted into the stream.
+![데이터 레이어 아키텍쳐를 보여주는 다이어그램](images/architecture-3-data-layer.png "Diagram showing the data layer architecture")
 
 
-### Writing data
+각 레포지토리는 자신의 모델들을 가집니다. 예를 들어, `TopicsRepository`는 `Topic` 모델을, `NewsRepository`는 `NewsResource` 모델을 가집니다.
 
-To write data, the repository provides suspend functions. It is up to the caller to ensure that their execution is suitably scoped.
-
-_Example: Follow a topic _
-
-Simply call `TopicsRepository.setFollowedTopicId` with the ID of the topic which the user wishes to follow.
+레포지토리는 다른 레이어들을 위한 공개 API이며 앱 데이터에 접근할 수 있는 유일한 방법입니다. 레포지토리에는 일반적으로 데이터를 읽고 쓸 수 있는 하나 이상의 메소드가 있습니다.
 
 
-### Data sources
+### 데이터 읽기
 
-A repository may depend on one or more data sources. For example, the `OfflineFirstTopicsRepository` depends on the following data sources:
+데이터는 데이터 스트림을 통해 노출됩니다. 이것은 레포지토리의 사용자가 데이터 변경에 대해 반응할 준비가 되어야 한다는 것을 의미합니다. 데이터는 스냅샷(예_ `getModal`)으로 노출되기 않습니다. 데이터가 사용될 때 여전히 유효하리라는 보장이 없기 때문입니다.
+
+읽기는 source of truth로서 로컬 저장소로부터 읽습니다. 그러므로 `Repository` 인스턴스로부터 읽어올 때 오류를 기대하진 않습니다. 그러나 로컬 저장소의 데이터를 원격 소스에 저장하려할 때 오류가 발생할 순 있습니다. 원격 소스 저장 오류에 대해선 아래 synchronization 섹션을 참고하세요.
+
+예: 저자 목록 읽기
+
+저자 목록은 `AuthorsRepository::getAuthorsStream` flow로 구독될 수 있습니다. 이 flow는 `List<Authors>`를 방출합니다.
+
+저자 목록이 변경될 때마다, 예를 들어 새로운 저자가 추가될 때, 변경된 `List<Author>`가 스트림에 방출될 것입니다.
+
+
+### 데이터 쓰기
+
+데이터를 쓰기 위해 레포지토리는 suspend 함수를 제공합니다. suspend 함수의 호출자는 함수가 실행되는 scope를 선택할 수 있습니다.
+
+예: 주제를 팔로우 하기
+
+간단하게 팔로우 하길 원하는 주제의 id를 넣어 `TopicsRepository.setFollowedTopicId`를 호출합니다.
+
+
+### 데이터소스
+
+레포지토리는 하나 이상의 데이터소스를 의존합니다. 예를 들어, `OfflineFirstTopicsRepository`는 다음의 데이터소스들을 의존합니다:
 
 
 <table>
   <tr>
-   <td><strong>Name</strong>
+   <td><strong>이름</strong>
    </td>
-   <td><strong>Backed by</strong>
+   <td><strong>저장 방법</strong>
    </td>
-   <td><strong>Purpose</strong>
+   <td><strong>목적</strong>
    </td>
   </tr>
   <tr>
@@ -193,7 +193,7 @@ A repository may depend on one or more data sources. For example, the `OfflineFi
    </td>
    <td><a href="https://developer.android.com/training/data-storage/room">Room/SQLite</a>
    </td>
-   <td>Persistent relational data associated with Topics
+   <td>주제와 관련있는 영속적 관계 데이터
    </td>
   </tr>
   <tr>
@@ -201,98 +201,98 @@ A repository may depend on one or more data sources. For example, the `OfflineFi
    </td>
    <td><a href="https://developer.android.com/topic/libraries/architecture/datastore">Proto DataStore</a>
    </td>
-   <td>Persistent unstructured data associated with user preferences, specifically which Topics the user is interested in. This is defined and modeled in a .proto file, using the protobuf syntax.
+   <td>특히 유저가 관심있는 주제와 관련있는 영속적 비구조적 설정 데이터. 이것은 protobuf 구문을 사용한 .proto 파일로 모델링 되고 정의됩니다.
    </td>
   </tr>
   <tr>
    <td>NiANetwork
    </td>
-   <td>Remote API accessed using Retrofit
+   <td>Retrofit을 사용한 원격 API 접근
    </td>
-   <td>Data for topics, provided through REST API endpoints as JSON.
+   <td>JSON으로 REST API에 제공하는, 토픽 데이터
    </td>
   </tr>
 </table>
 
 
 
-### Data synchronization
+### 데이터 동기화
 
-Repositories are responsible for reconciling data in local storage with remote sources. Once data is obtained from a remote data source it is immediately written to local storage. The  updated data is emitted from local storage (Room) into the relevant data stream and received by any listening clients.
+레포지토리는 로컬 저장소 데이터를 원격 소스에 저장하는 책임을 집니다. 원격 데이터소스로부터 데이터를 내려받으면 즉시 로컬 저장소에 저장합니다. 변경된 데이터가 있다면 이 데이터는 로컬 저장소로부터 관련된 데이터 스트림을 통해 구독하고 있는 위치로 방출됩니다.
 
-This approach ensures that the read and write concerns of the app are separate and do not interfere with each other.
+이 접근법은 앱의 읽기와 쓰기 관심사를 확실하게 분리시켜줍니다. (읽기는 구독을 통해 다른 위치에서 읽어질 수 있으므로)
 
-In the case of errors during data synchronization, an exponential backoff strategy is employed. This is delegated to `WorkManager` via the `SyncWorker`, an implementation of the `Synchronizer` interface.
+데이터 동기화 중에 오류가 발생한다면 지수 백오프 전략이 사용됩니다. 이것은 `Synchronizer` 인터페이스의 구현체인 `SyncWorker`를 통해 `WorkManger`에 위임됩니다.
 
-See the `OfflineFirstNewsRepository.syncWith` for an example of data synchronization.
-
-
-## UI Layer
-
-The [UI layer](https://developer.android.com/topic/architecture/ui-layer) comprises:
+데이터 동기화 예시를 보려면 `OfflineFirstNewsRepository.syncWith`를 참고하세요.
 
 
+## UI 레이어
 
-*   UI elements built using [Jetpack Compose](https://developer.android.com/jetpack/compose)
+[UI 레이어](https://developer.android.com/topic/architecture/ui-layer) 구성:
+
+
+
+*   UI 요스들은 [Jetpack Compose](https://developer.android.com/jetpack/compose)를 사용해 빌드됩니다.
 *   [Android ViewModels](https://developer.android.com/topic/libraries/architecture/viewmodel)
 
-The ViewModels receive streams of data from repositories and transform them into UI state. The UI elements reflect this state, and provide ways for the user to interact with the app. These interactions are passed as events to the view model where they are processed.
+ViewModel은 레포지토리로부터 데이터 스트림을 받아 데이터를 UI 상태로 변환합니다. UI 요소들은 이 상태를 반영하고 사용자와 앱이 상호작용할 수 있는 방법을 제공합니다. 이러한 상호작용은 이벤트로써 ViewModel로 전달되어 처리됩니다.
 
 
-![Diagram showing the UI layer architecture](images/architecture-4-ui-layer.png "Diagram showing the UI layer architecture")
+![UI 레이어 아키텍쳐를 보여주는 다이어그램](images/architecture-4-ui-layer.png "Diagram showing the UI layer architecture")
 
 
-### Modeling UI state
+### UI 상태 모델링하기
 
-UI state is modeled as a sealed hierarchy using interfaces and immutable data classes. State objects are only ever emitted through the transform of data streams. This approach ensures that:
-
-
-
-*   the UI state always represents the underlying app data - the app data is the source-of-truth.
-*   the UI elements handle all possible states.
-
-**Example: News feed on For You screen**
-
-The feed (a list) of news resources on the For You screen is modeled using `ForYouFeedState`. This is a sealed interface which creates a hierarchy of two possible states:
+UI 상태는 sealed 인터페이스로 계층화 되며 immutable data 클래스로 모델링 됩니다. 상태 객체들은 오직 데이터 스트림의 변형을 통해 방출됩니다. 이 접근법은 다음의 이점이 있습니다:
 
 
 
-*   `Loading` indicates that the data is loading
-*   `Success` indicates that the data was loaded successfully. The Success state contains the list of news resources.
+*   UI 상태는 항상 source-of-truth를 기반으로 한 데이터를 대표합니다.
+*   UI 요소들은 모든 가능한 상태를 다룹니다.
 
-The `feedState` is passed to the `ForYouScreen` composable, which handles both of these states.
+**예: ForYou 화면 위의 뉴스 피드**
 
-
-### Transforming streams into UI state
-
-View models receive streams of data as cold [flows](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow/index.html) from one or more repositories. These are [combined](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/combine.html) together to produce a single flow of UI state. This single flow is then converted to a hot flow using [stateIn](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/state-in.html). The conversion to a state flow enables UI elements to read the last known state from the flow.
-
-**Example: Displaying followed topics and authors**
-
-The `FollowingViewModel` exposes `uiState` as a `StateFlow<FollowingUiState>`. This hot flow is created by combining four data streams:
+ForYou 화면 위의 뉴스 피드 리소스는 `ForYouFeedState`를 사용해 모델링 됩니다. 이것은 2개의 가능한 상태로 구성된 sealed interface입니다. 
 
 
 
-*   List of authors (getAuthorsStream)
-*   List of author IDs which the current user is following
-*   List of topics
-*   List of topic IDs which the current user is following
+*   `Loading`는 데이터가 준비 중임을 의미합니다.
+*   `Success`는 데이터를 성공적으로 불러왔음을 의미합니다. Success 상태는 뉴스 목록을 포함합니다.
 
-The list of `Author`s is mapped to a new list of `FollowableAuthor`s. `FollowableAuthor` is a wrapper for `Author` which also indicates whether the current user is following that author. The same transformation is applied for the list of `Topic`s.
-
-The two new lists are used to create a `FollowingUiState.Interests` state which is exposed to the UI.
+`feedState`는 `ForYouScreen` composable로 전달됩니다.
 
 
-### Processing user interactions
+### 스트림을 UI 상태로 변환하기
 
-User actions are communicated from UI elements to view models using regular method invocations. These methods are passed to the UI elements as lambda expressions.
+ViewModel은 한 개 이상의 레포지토리로부터 cold [flows](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow/index.html)로 된 데이터 스트림을 전달받습니다. 이 flow들은 [combined](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/combine.html) 연산자를 사용해 하나의 UI 상태 flow로 변환됩니다. 이 단일 flow는 [stateIn](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/state-in.html) 연산자를 통해 hot flow로 변환됩니다. 이러한 과정은 UI 요소들이 flow로부터 마지막 상태를 읽을 수 있게 만들어줍니다.
 
-**Example: Following a topic**
+**예: 팔로잉 중인 주제와 저자를 보여주기**
 
-The `FollowingScreen` takes a lambda expression named `followTopic` which is supplied from `FollowingViewModel.followTopic`. Each time the user taps on a topic to follow this method is called. The view model then processes this action by informing the topics repository.
+`FollowingViewModel`은 `StateFlow<FollowingUiState>`를 통해 `uiState`를 내보냅니다. 이 hot flow는 4개의 데이터 스트림에 의해 만들어집니다:
 
 
-## Further reading
+
+*   저자 목록 (getAuthorsStream)
+*   팔로잉 중인 저자들의 ID 목록
+*   주제 목록
+*   팔로잉 중인 주제들의 ID 목록
+
+`Author` 목록은 팔로잉 중인지 아닌지를 담고 있는 `FollowableAuthor` 목록으로 매핑 됩니다. `Topic` 목록에도 같은 변형이 적용됩니다.
+
+두 새로운 목록은 `FollowingUiState.Interests` 상태를 만드는 데에 사용됩니다.
+
+
+### 사용자 상호작용 처리하기
+
+사용자 액션은 UI 요소들로부터 ViewModel의 메소드를 호출함으로써 처리됩니다. 이러한 메소드는 람다로써 UI 요소에 전달됩니다.
+
+**예: 주제 팔로잉 하기**
+
+`FollowingScreen`은 `FollowingViewModel.followTopic`으로부터 `followTopic`이라는 람다를 가집니다. 사용자가 주제를 탭할 때마다 이 메소드가 호출됩니다. ViewModel은 topics 레포지토리를 사용해 이 액션을 처리합니다.
+
+
+## 더 읽어보기
 
 [Guide to app architecture](https://developer.android.com/topic/architecture)
 
